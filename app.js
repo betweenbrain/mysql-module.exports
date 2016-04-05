@@ -4,43 +4,37 @@
 
 var express = require('express');
 var app     = express();
-var db      = require('./lib/database.js');
 var port    = process.env.PORT || 8080;
+var query   = require('./lib/query.js');
 
 /**
  * Routes
  */
 app.get('/', function (req, res) {
 
-    // Get database connection from pool
-    db.getConnection(function (err, connection) {
+    var sql = 'SELECT * FROM users';
+
+    query.do(sql, function (err, rows) {
         if (err) {
-            res.status(501).send('Database connection error: ', err.stack);
+            res.status(501).send('Database error: ' + err);
         }
-
-        // Perform the query
-        connection.query('SELECT * FROM users', function (err, rows) {
-            if (!err) {
-                res.status(200).send(rows)
-            }
-        });
-
-        // Release the connection back into the pool
-        connection.release();
+        if (!err) {
+            res.status(200).send(rows)
+        }
     });
 });
 
 app.get('/users', function (req, res) {
-    db.getConnection(function (err, connection) {
+
+    var sql = 'SELECT COUNT(*) as count FROM users';
+
+    query.do(sql, function (err, rows) {
         if (err) {
-            res.status(501).send('Database connection error: ', err.stack);
+            res.status(501).send('Database error: ' + err);
         }
-        connection.query('SELECT COUNT(*) FROM users', function (err, rows) {
-            if (!err) {
-                res.status(200).send(rows)
-            }
-        });
-        connection.release();
+        if (!err) {
+            res.status(200).send(rows[0])
+        }
     });
 });
 
